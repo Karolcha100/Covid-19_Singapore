@@ -3,6 +3,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 import matplotlib.dates as mdates
+
 def configure_axis(ax: Axes, df_name: pd.DataFrame) -> None:
     """Configures the X-axis for date formatting and grid."""
     ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
