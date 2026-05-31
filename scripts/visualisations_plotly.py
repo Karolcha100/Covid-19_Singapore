@@ -678,22 +678,22 @@ def build_report(
     print(f"Report saved → {figname}")
 
 
-data = pd.read_csv('../data_processed/SG_nona.csv')
-data['date'] = pd.to_datetime(data['date'])
-
-colors = {
-    'CONFIRMED': '#52A929',
-    'VACCINATED': '#00D5D2',
-    'FULLY_VACCINATED': '#D500DA',
-    'DECEASED': '#D50000',
-    'CFR': '#D32F2F',
-}
-
-sg_events = {
-    "Circuit Breaker": "2020-04-07",
-    "Vaccination Starts": "2020-12-30",
-    "Delta Wave": "2021-08-01",
-    "Omicron Wave": "2021-12-15",
-}
-
-build_report(data, color_dict=colors, event_dict=sg_events, figname="report.html")
+# data = pd.read_csv('../data_processed/SG_nona.csv')
+# data['date'] = pd.to_datetime(data['date'])
+#
+# colors = {
+#     'CONFIRMED': '#52A929',
+#     'VACCINATED': '#00D5D2',
+#     'FULLY_VACCINATED': '#D500DA',
+#     'DECEASED': '#D50000',
+#     'CFR': '#D32F2F',
+# }
+#
+# sg_events = {
+#     "Circuit Breaker": "2020-04-07",
+#     "Vaccination Starts": "2020-12-30",
+#     "Delta Wave": "2021-08-01",
+#     "Omicron Wave": "2021-12-15",
+# }
+#
+# build_report(data, color_dict=colors, event_dict=sg_events, figname="report.html")
