@@ -46,8 +46,3 @@ Simply run:
 ```
 python main.py
 ```
-
-## Co dodać do głównej prezentacji?
-1. Żródło informacji
-2. Ludność Singapuru (5 868 104 people), population density (8357.633 people / km^2)
-3. 

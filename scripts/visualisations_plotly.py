@@ -411,9 +411,17 @@ def _build_stat_cards_html(stats: dict | None) -> str:
     if not stats:
         return ""
 
+    def _fmt(v) -> str:
+        if isinstance(v, int):
+            return f"{v:,}"
+        if isinstance(v, float):
+            # Показываем до 3 значимых десятичных, убираем лишние нули
+            return f"{v:,.3f}".rstrip("0").rstrip(".")
+        return str(v)
+
     cards = "\n".join(
         f"""  <div class="stat-card">
-    <div class="stat-value" style="color:{color};">{value}</div>
+    <div class="stat-value" style="color:{color};">{_fmt(value)}</div>
     <div class="stat-label">{label}</div>
     <div class="stat-sub">{sub}</div>
   </div>"""
@@ -425,7 +433,6 @@ def _build_stat_cards_html(stats: dict | None) -> str:
 
 
 def _img_to_base64(path: str) -> str:
-    """Читает файл изображения и возвращает data-URI для вставки в <img src=>."""
     with open(path, "rb") as f:
         data = base64.b64encode(f.read()).decode("utf-8")
     ext = path.rsplit(".", 1)[-1].lower()
@@ -437,8 +444,6 @@ def build_report(
     df: pd.DataFrame,
     color_dict: dict,
     event_dict: dict | None = None,
-    stats: dict | None = None,
-    images: list[dict] | None = None,
     figname: str = "report.html",
 ) -> None:
     """
@@ -449,12 +454,10 @@ def build_report(
     df         : DataFrame with a parsed ``date`` column
     color_dict : colour mapping (same keys as the plotting functions)
     event_dict : {label: date_string} or None
-    stats      : {label: (value, sub_text, hex_color)} KPI cards, or None
-    images     : list of {"path": ..., "caption": ...} dicts, or None
     figname    : output file path
     """
 
-    # ── 1. Build figures ─────────────────────────────────────────────────────
+    # ── Build figures ─────────────────────────────────────────────────────
     fig_grid  = simple_descriptive_plots_grid(df, color_dict, event_dict)
     fig_cumul = cumulative_totals_plot(df, color_dict, event_dict)
     fig_cfr   = cfr_plot(df, color_dict, event_dict)
@@ -463,13 +466,14 @@ def build_report(
     cumul_div = fig_cumul.to_html(full_html=False, include_plotlyjs=False)
     cfr_div   = fig_cfr.to_html(full_html=False, include_plotlyjs=False)
 
+    stats_boxes = {"Population of Singapore": (5868104,"","#FF5454"), "Population density": (8357.633, "people / km^2", "#FFA854")}
+    stat_cards_html = _build_stat_cards_html(stats_boxes)
+
     cases_src = _img_to_base64("../plots/confirmed_pred.png")
     deaths_src = _img_to_base64("../plots/deceased_pred.png")
 
-    # ── 2. Optional sections ─────────────────────────────────────────────────
-    stat_cards_html = _build_stat_cards_html(stats)
 
-    # ── 3. Assemble HTML in named parts ──────────────────────────────────────
+    # ──  Assemble HTML in named parts ──────────────────────────────────────
 
     html_head = """\
 <!DOCTYPE html>
@@ -561,6 +565,14 @@ def build_report(
       border-radius: 4px;
     }
 
+    /* ── Description text under section h2 ── */
+    .section-desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 0.8rem;
+    }
+
     /* ── Footer ── */
     footer {
       max-width: 1280px; margin: 0 auto;
@@ -627,15 +639,19 @@ def build_report(
 </div>
 <div class="section">
   <h2>New Confirmed Cases — Time Series Prediction</h2>
+  
   <div class="card img-section">
-    <img src={cases_src} alt="New confirmed cases prediction"/>
+    <p class="section-desc">Prediction of the number of new confirmed cases for 180 days, from 31 Dec 2021, using both ARIMA and Prophet.</p>
+    <img src="{cases_src}" alt="New confirmed cases prediction"/>
   </div>
 </div>
 
 <div class="section">
   <h2>Deceased — Time Series Prediction</h2>
+  
   <div class="card img-section">
-    <img src={deaths_src} alt="Deceased time series prediction"/>
+    <p class="section-desc">Prediction of the number of deceased for 180 days, from 31 Dec 2021, using both ARIMA and Prophet.</p>
+    <img src="{deaths_src}" alt="Deceased time series prediction"/>
   </div>
 </div>
 """
@@ -661,22 +677,23 @@ def build_report(
 
     print(f"Report saved → {figname}")
 
-# data = pd.read_csv('../data_processed/SG_nona.csv')
-# data['date'] = pd.to_datetime(data['date'])
-#
-# colors = {
-#     'CONFIRMED': '#52A929',
-#     'VACCINATED': '#00D5D2',
-#     'FULLY_VACCINATED': '#D500DA',
-#     'DECEASED': '#D50000',
-#     'CFR': '#D32F2F',
-# }
-#
-# sg_events = {
-#     "Circuit Breaker": "2020-04-07",
-#     "Vaccination Starts": "2020-12-30",
-#     "Delta Wave": "2021-08-01",
-#     "Omicron Wave": "2021-12-15",
-# }
-#
-# build_report(data, color_dict=colors, event_dict=sg_events, figname="report.html")
+
+data = pd.read_csv('../data_processed/SG_nona.csv')
+data['date'] = pd.to_datetime(data['date'])
+
+colors = {
+    'CONFIRMED': '#52A929',
+    'VACCINATED': '#00D5D2',
+    'FULLY_VACCINATED': '#D500DA',
+    'DECEASED': '#D50000',
+    'CFR': '#D32F2F',
+}
+
+sg_events = {
+    "Circuit Breaker": "2020-04-07",
+    "Vaccination Starts": "2020-12-30",
+    "Delta Wave": "2021-08-01",
+    "Omicron Wave": "2021-12-15",
+}
+
+build_report(data, color_dict=colors, event_dict=sg_events, figname="report.html")
