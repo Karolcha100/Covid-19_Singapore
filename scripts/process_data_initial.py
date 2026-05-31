@@ -12,6 +12,6 @@ def process_data(path: pth.Path) -> pd.DataFrame:
         .select_dtypes(exclude='string')
         .set_index("date")
         .drop(columns=["openstreetmap_id", "latitude", "longitude", "aggregation_level"])
-        [:-5]
+        .interpolate(method="linear")
         .fillna(0)
     )
