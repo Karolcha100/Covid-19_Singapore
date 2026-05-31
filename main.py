@@ -27,7 +27,7 @@ def init_run() -> None:
 
     df = pd.read_csv(f"data_processed/SG_nona.csv", parse_dates=["date"])
 
-    build_report(df, color_dict=colors, event_dict=sg_events, figname="report.html")
+    build_report(df, color_dict=colors, event_dict=sg_events, figname="reports/report.html")
 
     app = ForecastApp(
         df=df,
