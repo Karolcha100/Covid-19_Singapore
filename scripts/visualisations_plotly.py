@@ -4,26 +4,20 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import base64
 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Internal helpers
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _add_event_lines(
-    fig: go.Figure,
-    event_dict: dict | None,
-    rows: list[int],
-    cols: list[int],
-    is_subplot: bool = True,
+        fig: go.Figure,
+        event_dict: dict | None,
+        rows: list[int],
+        cols: list[int],
+        is_subplot: bool = True,
 ) -> None:
     """
     Vertical dashed lines + rotated labels for significant events.
-
-    Parameters
-    ----------
-    fig        : plotly Figure
-    event_dict : {label: date_string}
-    rows, cols : subplot cells to annotate (paired lists, 1-indexed)
-    is_subplot : False when fig is a plain go.Figure() (no make_subplots grid)
     """
     if not event_dict:
         return
@@ -92,7 +86,7 @@ def _yaxis_opts() -> dict:
     return dict(
         showgrid=True,
         gridcolor="#D5D5D5",
-        title_standoff=8,   # ← brings axis title closer to tick labels
+        title_standoff=8,
     )
 
 
@@ -101,15 +95,12 @@ def _yaxis_opts() -> dict:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def simple_descriptive_plots_grid(
-    df: pd.DataFrame,
-    color_dict: dict,
-    event_dict: dict | None = None,
+        df: pd.DataFrame,
+        color_dict: dict,
+        event_dict: dict | None = None,
 ) -> go.Figure:
     """
     2×2 interactive dashboard — each subplot has its own legend.
-
-      [1,1] Daily Cases & Deaths       [1,2] Cumulative Cases & Deaths
-      [2,1] Daily Vaccinations         [2,2] Cumulative Vaccinations (%)
     """
     fig = make_subplots(
         rows=2, cols=2,
@@ -160,7 +151,7 @@ def simple_descriptive_plots_grid(
         legendgroup="g11",
     ), row=1, col=1, secondary_y=True)
 
-    fig.update_yaxes(title_text="Daily Cases",  color=color_dict["CONFIRMED"],
+    fig.update_yaxes(title_text="Daily Cases", color=color_dict["CONFIRMED"],
                      **_yaxis_opts(), row=1, col=1, secondary_y=False)
     fig.update_yaxes(title_text="Daily Deaths", color=color_dict["DECEASED"],
                      showgrid=False, title_standoff=8,
@@ -181,7 +172,7 @@ def simple_descriptive_plots_grid(
         legendgroup="g12",
     ), row=1, col=2, secondary_y=True)
 
-    fig.update_yaxes(title_text="Total Cases",  color=color_dict["CONFIRMED"],
+    fig.update_yaxes(title_text="Total Cases", color=color_dict["CONFIRMED"],
                      **_yaxis_opts(), row=1, col=2, secondary_y=False)
     fig.update_yaxes(title_text="Total Deaths", color=color_dict["DECEASED"],
                      showgrid=False, title_standoff=8,
@@ -252,35 +243,34 @@ def simple_descriptive_plots_grid(
         for c in (1, 2):
             fig.update_xaxes(_xaxis_opts(), row=r, col=c)
 
-    # Four separate legend boxes — centre-left of each subplot quadrant
     fig.update_layout(
         height=920, width=1220,
         title_text="COVID-19 Dashboard",
         plot_bgcolor="white",
         paper_bgcolor="white",
         legend=dict(
-            x=0.02, y=0.75,          # centre-left of subplot [1,1]
+            x=0.02, y=0.75,
             xanchor="left", yanchor="middle",
             bgcolor="rgba(255,255,255,0.85)",
             bordercolor="#ccc", borderwidth=1,
             groupclick="toggleitem",
         ),
         legend2=dict(
-            x=0.55, y=0.75,          # centre-left of subplot [1,2]
+            x=0.55, y=0.75,
             xanchor="left", yanchor="middle",
             bgcolor="rgba(255,255,255,0.85)",
             bordercolor="#ccc", borderwidth=1,
             groupclick="toggleitem",
         ),
         legend3=dict(
-            x=0.02, y=0.22,          # centre-left of subplot [2,1]
+            x=0.02, y=0.22,
             xanchor="left", yanchor="middle",
             bgcolor="rgba(255,255,255,0.85)",
             bordercolor="#ccc", borderwidth=1,
             groupclick="toggleitem",
         ),
         legend4=dict(
-            x=0.55, y=0.22,          # centre-left of subplot [2,2]
+            x=0.55, y=0.22,
             xanchor="left", yanchor="middle",
             bgcolor="rgba(255,255,255,0.85)",
             bordercolor="#ccc", borderwidth=1,
@@ -288,7 +278,6 @@ def simple_descriptive_plots_grid(
         ),
     )
 
-    # Assign each legendgroup to its dedicated legend box
     for trace in fig.data:
         lg = trace.legendgroup
         if lg == "g11":
@@ -304,13 +293,10 @@ def simple_descriptive_plots_grid(
 
 
 def cumulative_totals_plot(
-    df: pd.DataFrame,
-    color_dict: dict,
-    event_dict: dict | None = None,
+        df: pd.DataFrame,
+        color_dict: dict,
+        event_dict: dict | None = None,
 ) -> go.Figure:
-    """
-    Standalone: cumulative cases + vaccinations (left Y) vs deaths (right Y).
-    """
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     fig.add_trace(go.Scatter(
@@ -357,17 +343,13 @@ def cumulative_totals_plot(
 
 
 def cfr_plot(
-    df: pd.DataFrame,
-    color_dict: dict,
-    event_dict: dict | None = None,
+        df: pd.DataFrame,
+        color_dict: dict,
+        event_dict: dict | None = None,
 ) -> go.Figure:
-    """
-    14-day lagged Case Fatality Rate using 7-day rolling averages.
-    CFR_t = (Deaths_t / Cases_{t-14}) × 100
-    """
-    smooth_cases  = df["new_confirmed"].rolling(7).mean()
+    smooth_cases = df["new_confirmed"].rolling(7).mean()
     smooth_deaths = df["new_deceased"].rolling(7).mean()
-    lagged_cases  = smooth_cases.shift(14)
+    lagged_cases = smooth_cases.shift(14)
 
     cfr_series = (smooth_deaths / lagged_cases) * 100
     cfr_series = cfr_series.replace([np.inf, -np.inf], np.nan)
@@ -403,11 +385,6 @@ def cfr_plot(
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _build_stat_cards_html(stats: dict | None) -> str:
-    """
-    Render a row of KPI stat-cards from a dict:
-        { "Label": ("value", "sub-text", "#hexcolor"), ... }
-    Returns an empty string when stats is None.
-    """
     if not stats:
         return ""
 
@@ -415,7 +392,6 @@ def _build_stat_cards_html(stats: dict | None) -> str:
         if isinstance(v, int):
             return f"{v:,}"
         if isinstance(v, float):
-            # Показываем до 3 значимых десятичных, убираем лишние нули
             return f"{v:,.3f}".rstrip("0").rstrip(".")
         return str(v)
 
@@ -431,7 +407,6 @@ def _build_stat_cards_html(stats: dict | None) -> str:
     return f'<div class="stat-row">\n{cards}\n</div>'
 
 
-
 def _img_to_base64(path: str) -> str:
     with open(path, "rb") as f:
         data = base64.b64encode(f.read()).decode("utf-8")
@@ -440,38 +415,37 @@ def _img_to_base64(path: str) -> str:
             "svg": "image/svg+xml"}.get(ext, "image/png")
     return f"data:{mime};base64,{data}"
 
+
 def build_report(
-    df: pd.DataFrame,
-    color_dict: dict,
-    event_dict: dict | None = None,
-    figname: str = "report.html",
+        df: pd.DataFrame,
+        color_dict: dict,
+        event_dict: dict | None = None,
+        figname: str = "report.html",
 ) -> None:
     """
     Combine all figures into a single self-contained HTML report.
-
-    Parameters
-    ----------
-    df         : DataFrame with a parsed ``date`` column
-    color_dict : colour mapping (same keys as the plotting functions)
-    event_dict : {label: date_string} or None
-    figname    : output file path
     """
 
     # ── Build figures ─────────────────────────────────────────────────────
-    fig_grid  = simple_descriptive_plots_grid(df, color_dict, event_dict)
+    fig_grid = simple_descriptive_plots_grid(df, color_dict, event_dict)
     fig_cumul = cumulative_totals_plot(df, color_dict, event_dict)
-    fig_cfr   = cfr_plot(df, color_dict, event_dict)
+    fig_cfr = cfr_plot(df, color_dict, event_dict)
 
-    grid_div  = fig_grid.to_html(full_html=False, include_plotlyjs=False)
+    grid_div = fig_grid.to_html(full_html=False, include_plotlyjs=False)
     cumul_div = fig_cumul.to_html(full_html=False, include_plotlyjs=False)
-    cfr_div   = fig_cfr.to_html(full_html=False, include_plotlyjs=False)
+    cfr_div = fig_cfr.to_html(full_html=False, include_plotlyjs=False)
 
-    stats_boxes = {"Population of Singapore": (5868104,"","#FF5454"), "Population density": (8357.633, "people / km^2", "#FFA854")}
+    stats_boxes = {"Population of Singapore": (5868104, "", "#FF5454"),
+                   "Population density": (8357.633, "people / km^2", "#FFA854")}
     stat_cards_html = _build_stat_cards_html(stats_boxes)
 
+    # ── Encode Images to Base64 (Relative path from /scripts/ to /images/ or /plots/) ──
     cases_src = _img_to_base64("../plots/confirmed_pred.png")
     deaths_src = _img_to_base64("../plots/deceased_pred.png")
 
+    map_src = _img_to_base64("../images/map.png")
+    flag_src = _img_to_base64("../images/flag.png")
+    city_src = _img_to_base64("../images/city.jpg")
 
     # ──  Assemble HTML in named parts ──────────────────────────────────────
 
@@ -550,9 +524,9 @@ def build_report(
                   font-style: italic; }
 
     /* ── Image gallery ── */
-    .gallery { display: flex; flex-wrap: wrap; gap: 1rem; }
-    .gallery-item { flex: 1 1 300px; }
-    .gallery-item img { width: 100%; border-radius: 4px; display: block; }
+    .gallery { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
+    .gallery-item { flex: 1 1 300px; background: var(--card); border: 1px solid var(--border); padding: 0.5rem; border-radius: var(--radius); }
+    .gallery-item img { width: 100%; height: auto; border-radius: 4px; display: block; }
     .gallery-item figcaption {
       text-align: center; font-size: 0.8rem;
       color: var(--muted); margin-top: 0.4rem; font-style: italic;
@@ -579,11 +553,11 @@ def build_report(
       font-size: 0.8rem; color: var(--muted);
       text-align: center; font-style: italic;
     }
-    
+
     /* ── Section headings ── */
     .section-heading {
       text-align: center;
-      margin: 0 0 1.8rem;
+      margin: 2rem 0 1.8rem;
     }
     .section-heading h2 {
       font-family: 'Georgia', serif;
@@ -609,6 +583,44 @@ def build_report(
   <h1>COVID-19 dynamics in Singapore</h1>
   <p>Authors: Karol Chądzyński, Mykyta Khrabust</p>
 </header>
+"""
+
+    # Здесь для карточки флага добавлен style="background-color: #f0f0f0;"
+    html_intro = f"""\
+<div class="section">
+  <h2>Country Profile & Pandemic Context</h2>
+  <div class="card" style="line-height: 1.6; font-size: 1rem; padding: 1.5rem; text-align: justify; margin-bottom: 1.5rem;">
+    <p style="margin-bottom: 1rem;">
+      <strong>Singapore</strong>, officially the Republic of Singapore, is a sovereign island city-state in Southeast Asia. 
+      Inhabiting a compact territory of just over 700 square kilometers, its massive population results in an exceptionally high population density. 
+      As a major global financial nexus, shipping artery, and aviation hub, Singapore's deep international connectivity made it highly vulnerable to early viral importation during the onset of the pandemic.
+    </p>
+    <p>
+      <strong>COVID-19 Dynamics:</strong> Singapore's strategic response to COVID-19 stood out as exceptionally structured and agile. 
+      The nation initially pursued a strict elimination strategy, implementing aggressive contact tracing alongside a stringent nationwide lockdown, colloquially known as the <em>"Circuit Breaker"</em> in April 2020. 
+      Following a highly efficient rollout of its national vaccination campaign, Singapore managed to inoculate the vast majority of its populace. 
+      This historic coverage enabled the government to transition toward a "Living with COVID-19" paradigm, decoupling transmission spikes from severe healthcare strain and keeping mortality remarkably low during the subsequent Delta and Omicron waves.
+    </p>
+  </div>
+
+  <div class="gallery">
+    <figure class="gallery-item">
+      <img src="{map_src}" alt="Map of Singapore"/>
+      <figcaption>Geographical Location of Singapore</figcaption>
+    </figure>
+    <figure class="gallery-item" style="background-color: #f0f0f0;">
+      <img src="{flag_src}" alt="Flag of Singapore"/>
+      <figcaption>National Flag of Singapore</figcaption>
+    </figure>
+    <figure class="gallery-item">
+      <img src="{city_src}" alt="Singapore Cityscape"/>
+      <figcaption>Singapore Urban Landscape</figcaption>
+    </figure>
+  </div>
+</div>
+"""
+
+    html_stats_heading = """\
 <div class="section-heading">
   <h2>Summary Statistics</h2>
   <div class="section-rule"></div>
@@ -618,7 +630,7 @@ def build_report(
     html_stats = f"{stat_cards_html}\n" if stat_cards_html else ""
 
     html_charts = f"""\
-    
+
 <div class="section">
   <h2>Cases, Deaths &amp; Vaccinations</h2>
   <div class="card">{grid_div}</div>
@@ -639,7 +651,7 @@ def build_report(
 </div>
 <div class="section">
   <h2>New Confirmed Cases — Time Series Prediction</h2>
-  
+
   <div class="card img-section">
     <p class="section-desc">Prediction of the number of new confirmed cases for 180 days, from 31 Dec 2021, using both ARIMA and Prophet.</p>
     <img src="{cases_src}" alt="New confirmed cases prediction"/>
@@ -648,7 +660,7 @@ def build_report(
 
 <div class="section">
   <h2>Deceased — Time Series Prediction</h2>
-  
+
   <div class="card img-section">
     <p class="section-desc">Prediction of the number of deceased for 180 days, from 31 Dec 2021, using both ARIMA and Prophet.</p>
     <img src="{deaths_src}" alt="Deceased time series prediction"/>
@@ -656,20 +668,20 @@ def build_report(
 </div>
 """
 
-
     html_footer = """\
 <footer>DAV Final project, group 8.</footer>
 </body>
 </html>"""
 
-    # ── 4. Concatenate and write ──────────────────────────────────────────────
     full_html = (
-        html_head
-        + html_styles
-        + html_header
-        + html_stats
-        + html_charts
-        + html_footer
+            html_head
+            + html_styles
+            + html_header
+            + html_intro
+            + html_stats_heading
+            + html_stats
+            + html_charts
+            + html_footer
     )
 
     with open(figname, "w", encoding="utf-8") as f:
@@ -677,23 +689,22 @@ def build_report(
 
     print(f"Report saved → {figname}")
 
+data = pd.read_csv('../data_processed/SG_nona.csv')
+data['date'] = pd.to_datetime(data['date'])
 
-# data = pd.read_csv('../data_processed/SG_nona.csv')
-# data['date'] = pd.to_datetime(data['date'])
-#
-# colors = {
-#     'CONFIRMED': '#52A929',
-#     'VACCINATED': '#00D5D2',
-#     'FULLY_VACCINATED': '#D500DA',
-#     'DECEASED': '#D50000',
-#     'CFR': '#D32F2F',
-# }
-#
-# sg_events = {
-#     "Circuit Breaker": "2020-04-07",
-#     "Vaccination Starts": "2020-12-30",
-#     "Delta Wave": "2021-08-01",
-#     "Omicron Wave": "2021-12-15",
-# }
-#
-# build_report(data, color_dict=colors, event_dict=sg_events, figname="report.html")
+colors = {
+    'CONFIRMED': '#52A929',
+    'VACCINATED': '#00D5D2',
+    'FULLY_VACCINATED': '#D500DA',
+    'DECEASED': '#D50000',
+    'CFR': '#D32F2F',
+}
+
+sg_events = {
+    "Circuit Breaker": "2020-04-07",
+    "Vaccination Starts": "2020-12-30",
+    "Delta Wave": "2021-08-01",
+    "Omicron Wave": "2021-12-15",
+}
+
+build_report(data, color_dict=colors, event_dict=sg_events, figname="report.html")
